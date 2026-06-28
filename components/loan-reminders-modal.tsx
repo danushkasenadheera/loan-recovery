@@ -1,14 +1,13 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ReminderForm } from "@/components/reminder-form"
-import { Loader2, Plus, Pencil, Trash2, BellOff, AlertTriangle } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash2, BellOff, X, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { Reminder } from "@/types/reminder"
 
 type TabKey = "upcoming" | "all" | "loan"
@@ -26,9 +25,15 @@ function formatDate(dateStr: string) {
 
 function StatusBadge({ reminder }: { reminder: Reminder }) {
   const status = getReminderStatus(reminder)
-  if (status === "attended") return <Badge variant="secondary" className="text-xs">Attended</Badge>
-  if (status === "overdue") return <Badge variant="destructive" className="text-xs">Overdue</Badge>
-  return <Badge variant="outline" className="text-xs border-primary/50 text-primary">Pending</Badge>
+  if (status === "attended") return (
+    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#6B7280] shrink-0">Attended</span>
+  )
+  if (status === "overdue") return (
+    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#991B1B] shrink-0">Overdue</span>
+  )
+  return (
+    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#DBEAFE] text-[#1E40AF] shrink-0">Pending</span>
+  )
 }
 
 interface LoanRemindersModalProps {
@@ -70,6 +75,13 @@ export function LoanRemindersModal({ open, onOpenChange, loan }: LoanRemindersMo
   useEffect(() => {
     if (open) fetchList(tab)
   }, [open, tab, fetchList])
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onOpenChange(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open, onOpenChange])
 
   const handleTabChange = (value: string) => {
     setTab(value as TabKey)
@@ -118,143 +130,176 @@ export function LoanRemindersModal({ open, onOpenChange, loan }: LoanRemindersMo
 
   const showActions = tab !== "loan"
 
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-primary font-bold text-base">
-            Reminders — {loan.loanName}
-          </DialogTitle>
-        </DialogHeader>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-[rgba(15,23,42,.45)] overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onOpenChange(false) }}
+    >
+      <div className="relative w-full max-w-lg bg-card rounded-2xl shadow-[0_20px_80px_rgba(15,23,42,.3)] flex flex-col my-auto">
 
-        {formMode ? (
-          <div className="flex-1 overflow-y-auto py-2">
-            <p className="text-sm font-medium mb-4">{formMode === "add" ? "Add Reminder" : "Edit Reminder"}</p>
-            <ReminderForm
-              loan={loan}
-              reminder={editTarget ?? undefined}
-              onSuccess={handleFormSuccess}
-              onCancel={() => { setFormMode(null); setEditTarget(null) }}
-            />
+        {/* ── Sticky header ── */}
+        <div className="sticky top-0 z-10 bg-card rounded-t-2xl border-b border-[#E9D9C5]">
+          <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-[#F3F4F6]">
+            <p className="text-sm font-bold text-primary">Reminders</p>
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} aria-label="Close">
+              <X className="h-5 w-5" />
+            </Button>
           </div>
-        ) : (
-          <Tabs value={tab} onValueChange={handleTabChange} className="flex-1 flex flex-col min-h-0">
-            <div className="flex items-center justify-between gap-2 shrink-0">
-              <TabsList className="h-8">
-                <TabsTrigger value="upcoming" className="text-xs">Upcoming</TabsTrigger>
-                <TabsTrigger value="all" className="text-xs">All Mine</TabsTrigger>
-                <TabsTrigger value="loan" className="text-xs">All Loan</TabsTrigger>
-              </TabsList>
-              {showActions && (
-                <Button size="sm" onClick={() => setFormMode("add")} className="h-8 gap-1.5 shrink-0">
-                  <Plus className="h-3.5 w-3.5" />
-                  Add
-                </Button>
-              )}
+          <div className="px-5 py-3 space-y-0.5">
+            <p className="text-xs font-semibold text-[#374151] truncate">{loan.loanName}</p>
+            <p className="text-[10px] font-mono text-[#9CA3AF]">{loan.bankCode}/{loan.loanCode}/{loan.loanType}</p>
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div className="overflow-y-auto max-h-[70vh] px-5 py-5 space-y-4">
+
+          {formMode ? (
+            /* Add / Edit form */
+            <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+              <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                <p className="text-xs font-bold text-primary uppercase tracking-wide">
+                  {formMode === "add" ? "Add Reminder" : "Edit Reminder"}
+                </p>
+              </div>
+              <div className="px-4 py-4">
+                <ReminderForm
+                  loan={loan}
+                  reminder={editTarget ?? undefined}
+                  onSuccess={handleFormSuccess}
+                  onCancel={() => { setFormMode(null); setEditTarget(null) }}
+                />
+              </div>
             </div>
-
-            {["upcoming", "all", "loan"].map(t => (
-              <TabsContent key={t} value={t} className="flex-1 overflow-y-auto mt-3 min-h-0">
-                {error && (
-                  <Alert variant="destructive" className="mb-3">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
+          ) : (
+            <>
+              {/* Tabs bar + Add button */}
+              <div className="flex items-center justify-between gap-2">
+                <Tabs value={tab} onValueChange={handleTabChange}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="upcoming" className="text-xs">Upcoming</TabsTrigger>
+                    <TabsTrigger value="all" className="text-xs">All Mine</TabsTrigger>
+                    <TabsTrigger value="loan" className="text-xs">All Loan</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                {showActions && (
+                  <Button size="sm" onClick={() => setFormMode("add")} className="h-8 gap-1.5 shrink-0">
+                    <Plus className="h-3.5 w-3.5" />
+                    Add
+                  </Button>
                 )}
+              </div>
 
-                {deleteId !== null && (
-                  <Alert className="mb-3">
-                    <AlertDescription>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Delete this reminder?</p>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
-                            {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Delete"}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setDeleteId(null)} disabled={deleting}>
-                            Cancel
-                          </Button>
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-[#FEF2F2] px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <p className="text-xs font-medium text-red-600">{error}</p>
+                </div>
+              )}
+
+              {/* Delete confirm */}
+              {deleteId !== null && (
+                <div className="rounded-xl border border-red-200 bg-[#FEF2F2] px-4 py-3 space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                    <p className="text-sm font-semibold text-red-700">Delete this reminder?</p>
+                  </div>
+                  <div className="flex gap-2 pl-6">
+                    <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
+                      {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Delete"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setDeleteId(null)} disabled={deleting}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* List content */}
+              {loading ? (
+                <div className="flex items-center justify-center h-40">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : items.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-12 text-center">
+                  <BellOff className="h-8 w-8 text-muted-foreground/40" />
+                  <p className="text-sm text-muted-foreground">No reminders found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {items.map(r => {
+                    const status = getReminderStatus(r)
+                    return (
+                      <div
+                        key={r.id}
+                        className={cn(
+                          "bg-card border border-[#E5E7EB] rounded-xl px-4 py-3.5 space-y-2 shadow-[0_1px_3px_rgba(15,23,42,0.05)]",
+                          status === "attended" && "opacity-60"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={cn(
+                            "text-sm leading-snug flex-1",
+                            status === "attended" ? "line-through text-muted-foreground" : "text-[#111827]"
+                          )}>
+                            {r.message}
+                          </p>
+                          <StatusBadge reminder={r} />
                         </div>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
 
-                {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : items.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 py-12 text-center">
-                    <BellOff className="h-8 w-8 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">No reminders found</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {items.map(r => {
-                      const status = getReminderStatus(r)
-                      return (
-                        <div
-                          key={r.id}
-                          className={`rounded-lg border p-3 space-y-1.5 ${status === "attended" ? "opacity-60" : ""}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm leading-snug flex-1 ${status === "attended" ? "line-through text-muted-foreground" : ""}`}>
-                              {r.message}
-                            </p>
-                            <StatusBadge reminder={r} />
-                          </div>
-
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="text-xs text-muted-foreground space-y-0.5">
-                              <p>{formatDate(r.reminderDate)}</p>
-                              {r.isAttended && r.attendedAt && (
-                                <p>Attended: {formatDate(r.attendedAt)}</p>
-                              )}
-                            </div>
-
-                            {showActions && (
-                              <div className="flex items-center gap-2 shrink-0">
-                                {!r.isAttended && (
-                                  <div className="flex items-center gap-1.5">
-                                    <Checkbox
-                                      id={`attend-${r.id}`}
-                                      onCheckedChange={() => handleAttend(r.id)}
-                                    />
-                                    <label htmlFor={`attend-${r.id}`} className="text-xs text-muted-foreground cursor-pointer">
-                                      Done
-                                    </label>
-                                  </div>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => { setEditTarget(r); setFormMode("edit") }}
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                                  onClick={() => setDeleteId(r.id)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-xs text-[#6B7280] space-y-0.5">
+                            <p className="font-mono">{formatDate(r.reminderDate)}</p>
+                            {r.isAttended && r.attendedAt && (
+                              <p>Attended: {formatDate(r.attendedAt)}</p>
                             )}
                           </div>
+
+                          {showActions && (
+                            <div className="flex items-center gap-2 shrink-0">
+                              {!r.isAttended && (
+                                <div className="flex items-center gap-1.5">
+                                  <Checkbox
+                                    id={`attend-${r.id}`}
+                                    onCheckedChange={() => handleAttend(r.id)}
+                                  />
+                                  <label htmlFor={`attend-${r.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                                    Done
+                                  </label>
+                                </div>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-[#6B7280] hover:text-primary"
+                                onClick={() => { setEditTarget(r); setFormMode("edit") }}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-[#6B7280] hover:text-destructive"
+                                onClick={() => setDeleteId(r.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        )}
-      </DialogContent>
-    </Dialog>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+      </div>
+    </div>
   )
 }

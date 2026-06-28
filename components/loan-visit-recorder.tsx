@@ -2,13 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Loader2, Navigation, MapPin } from "lucide-react"
+import { Loader2, Navigation, MapPin, X, AlertCircle } from "lucide-react"
 import { SignaturePad, type SignaturePadRef } from "@/components/signature-pad"
 import { cn } from "@/lib/utils"
 
@@ -76,6 +74,13 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
 
   const hasLocation = loanLocation != null
   const isWithinRange = distance != null && (distance - Math.min(accuracy ?? 0, GPS_ACCURACY_CAP) <= PROXIMITY_THRESHOLD)
+
+  useEffect(() => {
+    if (!formOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFormOpen(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [formOpen])
 
   const resetForm = useCallback(() => {
     setObtainerStatement("")
@@ -217,87 +222,119 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
         RECORD VISIT
       </Button>
 
-      {/* Record Visit Dialog */}
-      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) setFormOpen(false) }}>
-        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-primary font-bold text-base">Record Visit</DialogTitle>
-          </DialogHeader>
+      {/* Record Visit — custom overlay */}
+      {formOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-[rgba(15,23,42,.45)] overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setFormOpen(false) }}
+        >
+          <div className="relative w-full max-w-lg bg-card rounded-2xl shadow-[0_20px_80px_rgba(15,23,42,.3)] flex flex-col my-auto">
 
-          <div className="flex-1 overflow-y-auto py-2 space-y-5">
-            <div className="space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Loan Obtainer</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="obtainer-statement" className="text-sm">Statement <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="obtainer-statement"
-                  value={obtainerStatement}
-                  onChange={e => setObtainerStatement(e.target.value)}
-                  placeholder="Statement from the loan holder…"
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
-                <SignaturePad ref={obtainerSigRef} className="h-36 w-full" />
-              </div>
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-card rounded-t-2xl border-b border-[#E9D9C5] flex items-center justify-between px-5 py-4">
+              <p className="text-sm font-bold text-primary">Record Visit</p>
+              <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)} disabled={submitting} aria-label="Close">
+                <X className="h-5 w-5" />
+              </Button>
             </div>
 
-            <div className="space-y-3 pt-1 border-t">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Part Payment</p>
-              <div className="flex items-center gap-2">
-                <Checkbox id="part-payment" checked={partPaymentMade} onCheckedChange={(v) => setPartPaymentMade(!!v)} />
-                <Label htmlFor="part-payment" className="text-sm cursor-pointer">Part payment made</Label>
-              </div>
-              {partPaymentMade && (
-                <div className="grid grid-cols-2 gap-3">
+            {/* Scrollable body */}
+            <div className="overflow-y-auto max-h-[70vh] px-5 py-5 space-y-4">
+
+              {/* Loan Obtainer */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Loan Obtainer</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="pmt-date" className="text-sm">Date</Label>
-                    <Input id="pmt-date" type="date" value={partPaymentDate} onChange={e => setPartPaymentDate(e.target.value)} max={todayStr()} />
+                    <Label htmlFor="obtainer-statement" className="text-sm">Statement <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="obtainer-statement"
+                      value={obtainerStatement}
+                      onChange={e => setObtainerStatement(e.target.value)}
+                      placeholder="Statement from the loan holder…"
+                      rows={3}
+                      className="resize-none"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="pmt-amount" className="text-sm">Amount (LKR)</Label>
-                    <Input id="pmt-amount" type="number" min="0" step="0.01" value={partPaymentAmount} onChange={e => setPartPaymentAmount(e.target.value)} placeholder="0.00" />
+                    <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
+                    <SignaturePad ref={obtainerSigRef} className="h-36 w-full" />
                   </div>
                 </div>
+              </div>
+
+              {/* Part Payment */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Part Payment</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="part-payment" checked={partPaymentMade} onCheckedChange={(v) => setPartPaymentMade(!!v)} />
+                    <Label htmlFor="part-payment" className="text-sm cursor-pointer">Part payment made during this visit</Label>
+                  </div>
+                  {partPaymentMade && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="pmt-date" className="text-sm">Date</Label>
+                        <Input id="pmt-date" type="date" value={partPaymentDate} onChange={e => setPartPaymentDate(e.target.value)} max={todayStr()} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="pmt-amount" className="text-sm">Amount (LKR)</Label>
+                        <Input id="pmt-amount" type="number" min="0" step="0.01" value={partPaymentAmount} onChange={e => setPartPaymentAmount(e.target.value)} placeholder="0.00" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Loan Officer */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Loan Officer</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="officer-instructions" className="text-sm">Statement <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="officer-instructions"
+                      value={officerInstructions}
+                      onChange={e => setOfficerInstructions(e.target.value)}
+                      placeholder="Statement from the visiting loan officer…"
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
+                    <SignaturePad ref={officerSigRef} className="h-36 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-[#FEF2F2] px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <p className="text-xs font-medium text-red-600">{error}</p>
+                </div>
               )}
+
             </div>
 
-            <div className="space-y-3 pt-1 border-t">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Loan Officer</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="officer-instructions" className="text-sm">Statement <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="officer-instructions"
-                  value={officerInstructions}
-                  onChange={e => setOfficerInstructions(e.target.value)}
-                  placeholder="Statement from the visiting loan officer…"
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
-                <SignaturePad ref={officerSigRef} className="h-36 w-full" />
-              </div>
+            {/* Sticky footer */}
+            <div className="sticky bottom-0 bg-card rounded-b-2xl border-t border-[#E9D9C5] px-5 py-4 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={submitting} className="min-w-[100px]">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Visit"}
+              </Button>
             </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription className="text-xs">{error}</AlertDescription>
-              </Alert>
-            )}
           </div>
-
-          <DialogFooter className="gap-2 pt-2 border-t">
-            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Visit"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   )
 }

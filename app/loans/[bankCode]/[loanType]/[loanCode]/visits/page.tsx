@@ -235,6 +235,7 @@ export default async function LoanWorkspacePage({
                 <LoanVisitList
                   initialVisits={visits.slice(0, PAGE_SIZE)}
                   loan={{ bankCode, loanType, loanCode }}
+                  guarantors={detail.guarantors}
                 />
               </div>
             </div>

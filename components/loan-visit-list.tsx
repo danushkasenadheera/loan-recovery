@@ -20,12 +20,19 @@ function fmtCurrency(amount: number | null) {
   return `LKR ${amount.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`
 }
 
+interface Guarantor {
+  name: string | null
+  mobile: string | null
+  address: string | null
+}
+
 interface LoanVisitListProps {
   initialVisits: LoanVisitListItem[]
   loan: { bankCode: string; loanType: string; loanCode: string }
+  guarantors?: Guarantor[]
 }
 
-export function LoanVisitList({ initialVisits, loan }: LoanVisitListProps) {
+export function LoanVisitList({ initialVisits, loan, guarantors = [] }: LoanVisitListProps) {
   const [visits, setVisits] = useState<LoanVisitListItem[]>(initialVisits)
   const [sigModal, setSigModal] = useState<{ visitId: number; guarantorNum: 1 | 2 } | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
@@ -72,34 +79,38 @@ export function LoanVisitList({ initialVisits, loan }: LoanVisitListProps) {
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {v.hasGuarantor1Signature ? (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <CheckCheck className="h-3 w-3" /> G1 Signed
-                </Badge>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs px-2"
-                  onClick={() => setSigModal({ visitId: v.id, guarantorNum: 1 })}
-                >
-                  G1 Sign
-                </Button>
+              {guarantors.length >= 1 && (
+                v.hasGuarantor1Signature ? (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <CheckCheck className="h-3 w-3" /> G1 Signed
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs px-2"
+                    onClick={() => setSigModal({ visitId: v.id, guarantorNum: 1 })}
+                  >
+                    G1 Sign
+                  </Button>
+                )
               )}
 
-              {v.hasGuarantor2Signature ? (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <CheckCheck className="h-3 w-3" /> G2 Signed
-                </Badge>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs px-2"
-                  onClick={() => setSigModal({ visitId: v.id, guarantorNum: 2 })}
-                >
-                  G2 Sign
-                </Button>
+              {guarantors.length >= 2 && (
+                v.hasGuarantor2Signature ? (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <CheckCheck className="h-3 w-3" /> G2 Signed
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs px-2"
+                    onClick={() => setSigModal({ visitId: v.id, guarantorNum: 2 })}
+                  >
+                    G2 Sign
+                  </Button>
+                )
               )}
 
               {v.hasManagerNote && (
@@ -125,6 +136,7 @@ export function LoanVisitList({ initialVisits, loan }: LoanVisitListProps) {
         <GuarantorSignatureModal
           visitId={sigModal.visitId}
           guarantorNum={sigModal.guarantorNum}
+          guarantor={guarantors[sigModal.guarantorNum - 1]}
           open={!!sigModal}
           onOpenChange={(open) => { if (!open) setSigModal(null) }}
           onSuccess={handleGuarantorSuccess}
@@ -135,6 +147,7 @@ export function LoanVisitList({ initialVisits, loan }: LoanVisitListProps) {
         visitId={detailId}
         open={detailOpen}
         onOpenChange={setDetailOpen}
+        guarantors={guarantors}
       />
     </>
   )
