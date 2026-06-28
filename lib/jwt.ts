@@ -36,6 +36,23 @@ export async function createJWT(user: User): Promise<string> {
     .sign(JWT_SECRET)
 }
 
+function decodeJWTPayload(token: string): Record<string, unknown> | null {
+  try {
+    const part = token.split(".")[1]
+    if (!part) return null
+    const json = atob(part.replace(/-/g, "+").replace(/_/g, "/"))
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+export function isBackendTokenExpired(authToken: string): boolean {
+  const payload = decodeJWTPayload(authToken)
+  if (!payload?.exp || typeof payload.exp !== "number") return false
+  return Math.floor(Date.now() / 1000) >= payload.exp
+}
+
 export async function verifyJWT(token: string): Promise<JWTPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
@@ -64,6 +81,7 @@ export async function getSession(): Promise<User | null> {
     if (!token) return null
     const payload = await verifyJWT(token)
     if (!payload) return null
+    if (isBackendTokenExpired(payload.authToken)) return null
     return {
       id: payload.userId,
       userName: payload.userName,
