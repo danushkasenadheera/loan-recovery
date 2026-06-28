@@ -124,7 +124,7 @@ export default async function LoanVisitsPage({
                       loan={{ bankCode, loanType, loanCode }}
                     />
                     <LoanOwnerAccountsModal nic={detail.nic} blockAccountNo={detail.blockAccountNo} />
-                    <LoanDetailsTrigger loan={{ bankCode, loanType, loanCode, referenceNo: detail.referenceNo }} />
+                    <LoanDetailsTrigger loan={{ bankCode, loanType, loanCode, referenceNo: detail.referenceNo, loanName: detail.loanName }} />
                     <p className="text-xs text-muted-foreground text-center leading-relaxed">
                       Make sure you are within 25m of the customer location to record a visit
                     </p>

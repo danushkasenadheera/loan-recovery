@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { LoanDetailsModal } from "@/components/loan-details-modal"
 
 interface LoanDetailsTriggerProps {
-  loan: { bankCode: string; loanType: string; loanCode: string; referenceNo: string }
+  loan: { bankCode: string; loanType: string; loanCode: string; referenceNo: string; loanName?: string | null }
 }
 
 export function LoanDetailsTrigger({ loan }: LoanDetailsTriggerProps) {
