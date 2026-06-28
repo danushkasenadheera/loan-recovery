@@ -26,14 +26,15 @@ export default async function LoginPage() {
   const branches = await fetchBranches()
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-xl font-bold text-primary-foreground">HDC</span>
-          </div>
-          <h1 className="text-2xl font-bold text-secondary">HDC Coop Bank</h1>
-          <p className="text-muted-foreground text-sm mt-1">Loan Recovery System</p>
+    <div className="relative min-h-screen flex items-center justify-center p-4">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/login-background.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative z-10 w-full max-w-md space-y-6">
+        <div className="flex flex-col items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="HDC Coop Bank" className="h-20 w-auto drop-shadow-lg" />
+          <p className="text-white text-2xl font-bold tracking-widest drop-shadow uppercase">Loan Recovery System</p>
         </div>
         <LoginForm branches={branches} />
       </div>

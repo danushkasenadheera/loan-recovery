@@ -50,8 +50,8 @@ export function LoanSearchForm({ loanTypes, userBankCode, defaultValues }: Props
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-secondary">
-          <Search className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-primary text-base font-bold">
+          <Search className="h-5 w-5 text-accent" />
           Loan Search
         </CardTitle>
       </CardHeader>

@@ -192,7 +192,7 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
       <Dialog open={formOpen} onOpenChange={(open) => { if (!open) setFormOpen(false) }}>
         <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="text-secondary text-base">Record Visit</DialogTitle>
+            <DialogTitle className="text-primary font-bold text-base">Record Visit</DialogTitle>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto py-2 space-y-5">

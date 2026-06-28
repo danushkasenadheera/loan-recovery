@@ -22,8 +22,8 @@ export function LoginForm({ branches }: { branches: Branch[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-secondary">
-          <LogIn className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-primary font-bold">
+          <LogIn className="h-5 w-5 text-accent" />
           Sign In
         </CardTitle>
       </CardHeader>

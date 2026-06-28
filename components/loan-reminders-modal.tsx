@@ -122,7 +122,7 @@ export function LoanRemindersModal({ open, onOpenChange, loan }: LoanRemindersMo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-secondary text-base">
+          <DialogTitle className="text-primary font-bold text-base">
             Reminders — {loan.loanName}
           </DialogTitle>
         </DialogHeader>

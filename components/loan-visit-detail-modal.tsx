@@ -70,7 +70,7 @@ export function LoanVisitDetailModal({ visitId, open, onOpenChange }: LoanVisitD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-secondary text-base">Visit Details</DialogTitle>
+          <DialogTitle className="text-primary font-bold text-base">Visit Details</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto py-2 space-y-5">

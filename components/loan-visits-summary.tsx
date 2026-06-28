@@ -33,7 +33,7 @@ export function LoanVisitsSummary({ detail }: { detail: LoanDetail }) {
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-xs text-muted-foreground">Reference No</p>
-            <p className="text-base font-bold font-mono text-secondary leading-tight">{detail.referenceNo}</p>
+            <p className="text-base font-bold font-mono text-primary leading-tight">{detail.referenceNo}</p>
             {detail.address && (
               <p className="text-xs text-muted-foreground mt-1">{detail.address}</p>
             )}

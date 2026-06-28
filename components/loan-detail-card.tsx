@@ -31,7 +31,7 @@ export function LoanDetailCard({ detail }: { detail: LoanDetail }) {
     <div className="space-y-3">
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-secondary text-base">
+          <CardTitle className="flex items-center gap-2 text-primary font-bold text-base">
             <FileText className="h-4 w-4" />
             Loan Details
           </CardTitle>
@@ -40,7 +40,7 @@ export function LoanDetailCard({ detail }: { detail: LoanDetail }) {
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="col-span-2 sm:col-span-3">
               <dt className="text-xs text-muted-foreground">Reference No</dt>
-              <dd className="text-sm font-semibold font-mono mt-0.5 text-secondary">{detail.referenceNo}</dd>
+              <dd className="text-sm font-semibold font-mono mt-0.5 text-[#111827]">{detail.referenceNo}</dd>
             </div>
             <div className="col-span-2 sm:col-span-3">
               <Field label="Address" value={detail.address ?? ""} />
@@ -59,7 +59,7 @@ export function LoanDetailCard({ detail }: { detail: LoanDetail }) {
       {detail.guarantors.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-secondary text-base">
+            <CardTitle className="flex items-center gap-2 text-primary font-bold text-base">
               <User className="h-4 w-4" />
               Guarantors
             </CardTitle>

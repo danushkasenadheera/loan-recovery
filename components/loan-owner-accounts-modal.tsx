@@ -57,7 +57,7 @@ export function LoanOwnerAccountsModal({ nic, blockAccountNo }: LoanOwnerAccount
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-secondary text-base">Account Details</DialogTitle>
+            <DialogTitle className="text-primary font-bold text-base">Account Details</DialogTitle>
           </DialogHeader>
 
           {loading && (

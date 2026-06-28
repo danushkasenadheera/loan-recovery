@@ -63,7 +63,7 @@ export function GuarantorSignatureModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-secondary text-base">
+          <DialogTitle className="text-primary font-bold text-base">
             Guarantor {guarantorNum} Signature
           </DialogTitle>
         </DialogHeader>

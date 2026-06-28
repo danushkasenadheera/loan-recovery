@@ -31,7 +31,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
               <span className="text-xs font-bold text-primary-foreground">HDC</span>
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-semibold text-secondary leading-none">HDC Coop Bank</p>
+              <p className="text-sm font-semibold text-primary leading-none">HDC Coop Bank</p>
               <p className="text-xs text-muted-foreground mt-0.5">Loan Recovery System</p>
             </div>
           </div>
