@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, LocateFixed, Loader2 } from "lucide-react"
+import { Navigation, LocateFixed, Loader2 } from "lucide-react"
 
 declare global {
   interface Window {
@@ -161,10 +161,10 @@ export function LoanVisitMap({ lat, lng, loanName, mapClassName = "h-48" }: Loan
           variant="outline"
           size="sm"
           className="gap-1.5 flex-1"
-          onClick={() => window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank")}
+          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank")}
         >
-          <ExternalLink className="h-3.5 w-3.5" />
-          Open in Google Maps
+          <Navigation className="h-3.5 w-3.5" />
+          Navigate to Customer
         </Button>
         <Button
           variant="outline"

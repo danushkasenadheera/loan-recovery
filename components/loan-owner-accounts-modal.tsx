@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Loader2, Wallet, History } from "lucide-react"
+import { Loader2, Wallet, History, X, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { LoanOwnerAccount } from "@/types/loan-visit"
 
@@ -40,77 +39,127 @@ export function LoanOwnerAccountsModal({ nic, blockAccountNo }: LoanOwnerAccount
     }
   }
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open])
+
   if (!nic) return null
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="lg"
-        onClick={handleOpen}
-        className="w-full gap-2 h-11 font-semibold tracking-wide"
-      >
+      <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleOpen}>
         <Wallet className="h-4 w-4" />
         View Account Details
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-primary font-bold text-base">Account Details</DialogTitle>
-          </DialogHeader>
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-[rgba(15,23,42,.45)] overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
+        >
+          <div className="relative w-full max-w-lg bg-card rounded-2xl shadow-[0_20px_80px_rgba(15,23,42,.3)] flex flex-col my-auto">
 
-          {loading && (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          )}
-
-          {error && <p className="text-sm text-destructive text-center py-6">{error}</p>}
-
-          {!loading && !error && accounts.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">No accounts found.</p>
-          )}
-
-          {!loading && accounts.length > 0 && (
-            <div className="divide-y rounded-lg border overflow-hidden">
-              <div className="grid grid-cols-[1fr_auto_auto] px-3 py-2 bg-muted text-xs font-medium text-muted-foreground">
-                <span>Account No</span>
-                <span className="text-right pr-4">Balance</span>
-                <span />
+            {/* ── Sticky header ── */}
+            <div className="sticky top-0 z-10 bg-card rounded-t-2xl border-b border-[#E9D9C5]">
+              <div className="flex items-center justify-between px-5 py-3">
+                <p className="text-sm font-bold text-primary">Account Details</p>
+                <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close">
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-              {accounts.map((acc, i) => {
-                const isLinked = blockAccountNo && acc.accNo === blockAccountNo
-                return (
-                  <div
-                    key={i}
-                    className={cn(
-                      "grid grid-cols-[1fr_auto_auto] items-center px-3 py-2.5",
-                      isLinked ? "bg-green-50 dark:bg-green-950/30" : "bg-background"
-                    )}
-                  >
-                    <span className={cn("font-mono text-xs", isLinked && "font-semibold text-green-700 dark:text-green-400")}>
-                      {acc.accNo ?? "—"}
-                    </span>
-                    <span className={cn("text-right text-sm pr-4", isLinked && "font-semibold text-green-700 dark:text-green-400")}>
-                      {fmtCurrency(acc.balance)}
-                    </span>
-                    {acc.accNo && (
-                      <Link
-                        href={`/account-history/${encodeURIComponent(acc.accNo)}`}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                        title="View full history"
-                      >
-                        <History className="h-3.5 w-3.5" />
-                      </Link>
-                    )}
-                  </div>
-                )
-              })}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            {/* ── Body ── */}
+            <div className="overflow-y-auto max-h-[70vh]">
+              {loading && (
+                <div className="flex items-center justify-center h-40">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              )}
+
+              {error && (
+                <div className="flex flex-col items-center gap-2 h-40 justify-center">
+                  <AlertCircle className="h-8 w-8 text-muted-foreground/30" />
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </div>
+              )}
+
+              {!loading && !error && accounts.length === 0 && (
+                <div className="flex items-center justify-center h-40">
+                  <p className="text-sm text-muted-foreground">No accounts found.</p>
+                </div>
+              )}
+
+              {!loading && !error && accounts.length > 0 && (
+                <div className="px-5 py-5">
+                  <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                    <div className="px-5 py-3 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                      <p className="text-sm font-bold text-primary">
+                        Owner Accounts
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">({accounts.length})</span>
+                      </p>
+                    </div>
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-[#FAF6F2] sticky top-0 z-10">
+                          <th className="text-left px-4 py-3 font-semibold text-[#374151] border-b border-[#E9D9C5]">Account No</th>
+                          <th className="text-right px-4 py-3 font-semibold text-[#374151] border-b border-[#E9D9C5]">Balance</th>
+                          <th className="px-4 py-3 border-b border-[#E9D9C5] w-8" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accounts.map((acc, i) => {
+                          const isLinked = blockAccountNo != null && acc.accNo === blockAccountNo
+                          return (
+                            <tr
+                              key={i}
+                              className={cn(
+                                "hover:bg-[#FFF8E8] transition-colors",
+                                isLinked ? "bg-[#F0FDF4]" : i % 2 !== 0 ? "bg-[#FCFCFC]" : "bg-white"
+                              )}
+                            >
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <span className={cn("font-mono", isLinked ? "font-semibold text-green-700" : "text-[#111827]")}>
+                                    {acc.accNo ?? "—"}
+                                  </span>
+                                  {isLinked && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#DCFCE7] text-[#166534]">
+                                      Linked
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className={cn("px-4 py-3 text-right font-mono font-semibold", isLinked ? "text-green-700" : "text-[#111827]")}>
+                                {fmtCurrency(acc.balance)}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {acc.accNo && (
+                                  <Link
+                                    href={`/account-history/${encodeURIComponent(acc.accNo)}`}
+                                    className="text-muted-foreground hover:text-primary transition-colors"
+                                    title="View history"
+                                  >
+                                    <History className="h-3.5 w-3.5" />
+                                  </Link>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
     </>
   )
 }
