@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
-import { Wifi, WifiOff } from "lucide-react"
+import { WifiOff } from "lucide-react"
 
 export function NetworkStatusIndicator() {
   const [isOnline, setIsOnline] = useState(true)
@@ -21,17 +20,17 @@ export function NetworkStatusIndicator() {
 
   if (isOnline) {
     return (
-      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
-        <Wifi className="h-3 w-3" />
-        <span className="hidden sm:inline">Online</span>
-      </Badge>
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF3] border border-[#BBF7D0]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A] shrink-0" />
+        <span className="text-[11px] font-medium text-[#166534] hidden sm:inline leading-none">Online</span>
+      </div>
     )
   }
 
   return (
-    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
-      <WifiOff className="h-3 w-3" />
-      <span className="hidden sm:inline">Offline</span>
-    </Badge>
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 border border-red-200">
+      <WifiOff className="h-3 w-3 text-red-600 shrink-0" />
+      <span className="text-[11px] font-medium text-red-700 hidden sm:inline leading-none">Offline</span>
+    </div>
   )
 }
