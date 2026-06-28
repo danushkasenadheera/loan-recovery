@@ -4,6 +4,7 @@ import { getSession } from "@/lib/jwt"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { GoogleMapComponent } from "@/components/google-map"
 import { ArrowLeft, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface Loan {
   bankCode: string
@@ -70,19 +71,15 @@ export default async function LoanTagPage({
       <main className="flex-1 flex flex-col gap-3 px-4 py-3 min-h-0">
 
         {/* Breadcrumb-style back nav */}
-        <div className="flex items-center gap-1.5">
-          <Link
-            href={dashboardHref}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Loan {loan.loanCode}
-          </Link>
-          <span className="text-muted-foreground/40 text-sm">/</span>
-          <span className="text-sm font-medium text-foreground">Tag Location</span>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild className="gap-1.5 -ml-2 text-muted-foreground hover:text-foreground shrink-0">
+            <Link href={dashboardHref}>
+              <ArrowLeft className="h-4 w-4" />
+              {bankCode}/{loanCode}/{loanType}
+            </Link>
+          </Button>
+          <h1 className="text-lg font-bold text-primary">Tag Customer Location</h1>
         </div>
-
-        <h1 className="text-lg font-bold text-primary -mt-1">Tag Customer Location</h1>
 
         {/* Compact loan summary card */}
         <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_10px_rgba(15,23,42,0.05)] border-l-4 border-l-[#C99A2E]">
