@@ -34,12 +34,12 @@ export default async function EmployeeLoanReportPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader user={{ name: user.userName, bankCode: user.bankCode, userType: user.userType }} />
 
-      <main className="container mx-auto px-4 py-4 max-w-6xl space-y-4">
+      <main className="container mx-auto px-4 py-6 max-w-6xl space-y-6">
         <div className="flex items-center gap-3">
           <BackButton />
           <div>
-            <p className="text-base font-bold">Employee Wise Loan Report</p>
-            <p className="text-xs text-muted-foreground">Filter by employee and loan type to view loans</p>
+            <h1 className="text-xl font-bold text-primary leading-none">Employee Loan Portfolio</h1>
+            <p className="text-sm text-muted-foreground mt-1">View and analyze all loans assigned to an employee</p>
           </div>
         </div>
 

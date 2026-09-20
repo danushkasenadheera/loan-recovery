@@ -33,12 +33,14 @@ export default async function RemindersPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <DashboardHeader user={{ name: user.userName, bankCode: user.bankCode, userType: user.userType }} />
 
-      <main className="flex-1 container mx-auto px-4 py-4 max-w-3xl space-y-4">
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-3xl space-y-6">
+
+        {/* Page header */}
         <div className="flex items-center gap-3">
           <BackButton />
           <div>
-            <p className="text-base font-bold">My Reminders</p>
-            <p className="text-xs text-muted-foreground">{active.length} active · last 20 completed</p>
+            <h1 className="text-xl font-bold text-primary leading-none">My Reminders</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage customer follow-ups and visit reminders</p>
           </div>
         </div>
 

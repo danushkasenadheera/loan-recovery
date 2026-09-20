@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { searchParams } = req.nextUrl
-  const params = new URLSearchParams({ BankCode: searchParams.get("BankCode") ?? "" })
+  const params = new URLSearchParams()
+  const bankCode = searchParams.get("BankCode")
+  if (bankCode) params.set("BankCode", bankCode)
   const search = searchParams.get("Search")
   if (search) params.set("Search", search)
 

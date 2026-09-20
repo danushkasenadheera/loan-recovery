@@ -1,7 +1,7 @@
 "use client"
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { FileText, Users, CreditCard, Info, ScrollText } from "lucide-react"
+import { FileText, Users, CreditCard, Info, ScrollText, Phone, MapPin, User } from "lucide-react"
 import type { LoanDetail } from "@/types/loan-visit"
 
 function fmtDate(s: string | null) {
@@ -10,7 +10,7 @@ function fmtDate(s: string | null) {
 }
 
 function fmtNoteDate(s: string | null) {
-  if (!s) return ""
+  if (!s) return null
   const d = new Date(s)
   return {
     day: d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
@@ -34,13 +34,13 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
   return (
-    <Accordion type="multiple" defaultValue={["repayment", "guarantors"]} className="w-full">
+    <Accordion type="single" collapsible defaultValue="repayment" className="w-full">
 
       <AccordionItem value="repayment">
-        <AccordionTrigger className="text-sm">
-          <span className="flex items-center gap-2"><CreditCard className="h-3.5 w-3.5 shrink-0" />Repayment Details</span>
+        <AccordionTrigger className="text-sm px-4">
+          <span className="flex items-center gap-2"><CreditCard className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="font-semibold">Repayment Details</span></span>
         </AccordionTrigger>
-        <AccordionContent className="space-y-3 pb-4">
+        <AccordionContent className="px-4 space-y-3 pb-4">
           <Row label="Loan Amount" value={fmtCurrency(detail.loanAmount)} />
           <Row label="Installment Amount" value={fmtCurrency(detail.installmentAmount)} />
           <Row label="Interest Rate" value={detail.interestRate != null ? `${detail.interestRate}%` : "—"} />
@@ -51,10 +51,10 @@ export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
       </AccordionItem>
 
       <AccordionItem value="loan-details">
-        <AccordionTrigger className="text-sm gap-2">
-          <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 shrink-0" />Loan Details</span>
+        <AccordionTrigger className="text-sm px-4">
+          <span className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="font-semibold">Loan Details</span></span>
         </AccordionTrigger>
-        <AccordionContent className="space-y-3 pb-4">
+        <AccordionContent className="px-4 space-y-3 pb-4">
           <Row label="Reference No" value={detail.referenceNo} />
           {detail.address && <Row label="Address" value={detail.address} />}
           {detail.blockAccountNo && <Row label="Bank Account" value={detail.blockAccountNo} />}
@@ -62,22 +62,40 @@ export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
       </AccordionItem>
 
       <AccordionItem value="guarantors">
-        <AccordionTrigger className="text-sm">
+        <AccordionTrigger className="text-sm px-4">
           <span className="flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 shrink-0" />
-            Guarantors ({detail.guarantors.length})
+            <Users className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="font-semibold">Guarantors ({detail.guarantors.length})</span>
           </span>
         </AccordionTrigger>
-        <AccordionContent className="pb-4">
+        <AccordionContent className="px-4 pb-4">
           {detail.guarantors.length === 0 ? (
             <p className="text-sm text-muted-foreground">No guarantors on record</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {detail.guarantors.map((g, i) => (
-                <div key={i} className="space-y-1 text-sm">
-                  <p className="font-medium">{g.name ?? "—"}</p>
-                  {g.mobile && <p className="text-muted-foreground">{g.mobile}</p>}
-                  {g.address && <p className="text-muted-foreground text-xs">{g.address}</p>}
+                <div key={i} className="rounded-lg border border-[#E5E7EB] bg-[#FAFAFA] p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <User className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <p className="text-sm font-semibold text-[#111827]">{g.name ?? "—"}</p>
+                  </div>
+                  {g.mobile && (
+                    <a
+                      href={`tel:${g.mobile}`}
+                      className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline"
+                    >
+                      <Phone className="h-3 w-3 shrink-0" />
+                      {g.mobile}
+                    </a>
+                  )}
+                  {g.address && (
+                    <div className="flex items-start gap-1.5">
+                      <MapPin className="h-3 w-3 text-[#9CA3AF] mt-0.5 shrink-0" />
+                      <p className="text-xs text-[#6B7280] leading-snug">{g.address}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -85,11 +103,11 @@ export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
         </AccordionContent>
       </AccordionItem>
 
-<AccordionItem value="additional">
-        <AccordionTrigger className="text-sm">
-          <span className="flex items-center gap-2"><Info className="h-3.5 w-3.5 shrink-0" />Loan Status</span>
+      <AccordionItem value="additional">
+        <AccordionTrigger className="text-sm px-4">
+          <span className="flex items-center gap-2"><Info className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="font-semibold">Loan Status</span></span>
         </AccordionTrigger>
-        <AccordionContent className="space-y-4 pb-4">
+        <AccordionContent className="px-4 space-y-4 pb-4">
           <div className="space-y-3">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Balance</p>
             <div className="space-y-3">
@@ -110,17 +128,17 @@ export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
         </AccordionContent>
       </AccordionItem>
 
-      <AccordionItem value="loan-notes">
-        <AccordionTrigger className="text-sm">
+      <AccordionItem value="loan-notes" className="border-b-0">
+        <AccordionTrigger className="text-sm px-4">
           <span className="flex items-center gap-2">
-            <ScrollText className="h-3.5 w-3.5 shrink-0" />
-            Loan Notes
+            <ScrollText className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="font-semibold">Loan Notes</span>
             {detail.loanNotes.length > 0 && (
               <span className="ml-1 text-xs text-muted-foreground font-normal">({detail.loanNotes.length})</span>
             )}
           </span>
         </AccordionTrigger>
-        <AccordionContent className="pb-4">
+        <AccordionContent className="px-4 pb-4">
           {detail.loanNotes.length === 0 ? (
             <p className="text-sm text-muted-foreground">No notes on record.</p>
           ) : (

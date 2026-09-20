@@ -2,19 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Loader2, Navigation } from "lucide-react"
+import { Loader2, Navigation, MapPin, X, AlertCircle } from "lucide-react"
 import { SignaturePad, type SignaturePadRef } from "@/components/signature-pad"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-const PROXIMITY_THRESHOLD = 25  // target metres
-const GPS_ACCURACY_CAP = 30     // cap accuracy contribution so poor-signal devices can't unlock from 200m away
+const PROXIMITY_THRESHOLD = 25
+const GPS_ACCURACY_CAP = 30
 
 interface LoanVisitRecorderProps {
   loanLocation: { lat: number; lng: number } | null
@@ -55,10 +52,8 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
   const obtainerSigRef = useRef<SignaturePadRef>(null)
   const officerSigRef = useRef<SignaturePadRef>(null)
 
-  // Watch GPS
   useEffect(() => {
     if (!navigator.geolocation) { setGpsError(true); return }
-
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setUserLat(pos.coords.latitude)
@@ -72,19 +67,20 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
-  // Recalculate distance when user location changes
   useEffect(() => {
-    if (!loanLocation || userLat == null || userLng == null) {
-      setDistance(null)
-      return
-    }
+    if (!loanLocation || userLat == null || userLng == null) { setDistance(null); return }
     setDistance(haversine(userLat, userLng, loanLocation.lat, loanLocation.lng))
   }, [userLat, userLng, loanLocation])
 
   const hasLocation = loanLocation != null
-  const isWithinRange = distance != null && (
-    distance - Math.min(accuracy ?? 0, GPS_ACCURACY_CAP) <= PROXIMITY_THRESHOLD
-  )
+  const isWithinRange = distance != null && (distance - Math.min(accuracy ?? 0, GPS_ACCURACY_CAP) <= PROXIMITY_THRESHOLD)
+
+  useEffect(() => {
+    if (!formOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFormOpen(false) }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [formOpen])
 
   const resetForm = useCallback(() => {
     setObtainerStatement("")
@@ -107,14 +103,12 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
   const handleSubmit = async () => {
     const obtainerSig = obtainerSigRef.current?.getSignature()
     const officerSig = officerSigRef.current?.getSignature()
-
     if (!obtainerStatement.trim()) { setError("Loan obtainer statement is required."); return }
     if (!obtainerSig) { setError("Loan obtainer signature is required."); return }
     if (!officerInstructions.trim()) { setError("Officer instructions are required."); return }
     if (!officerSig) { setError("Officer signature is required."); return }
     if (partPaymentMade && (!partPaymentAmount || Number(partPaymentAmount) <= 0)) {
-      setError("Part payment amount is required when a payment is made.")
-      return
+      setError("Part payment amount is required when a payment is made."); return
     }
     if (capturedLat == null || capturedLng == null) { setError("GPS location could not be captured. Please try again."); return }
 
@@ -151,147 +145,196 @@ export function LoanVisitRecorder({ loanLocation, loan }: LoanVisitRecorderProps
 
   const isDisabled = !hasLocation || gpsError || distance == null || !isWithinRange
 
-  const distanceBadgeColor = !hasLocation || gpsError
-    ? "border-muted-foreground/40 text-muted-foreground"
-    : isWithinRange
-    ? "border-green-500 text-green-700"
-    : distance != null && distance < 100
-    ? "border-amber-500 text-amber-700"
-    : "border-muted-foreground/40 text-muted-foreground"
-
-  const distanceLabel = !hasLocation
-    ? "No location tagged"
-    : gpsError
-    ? "GPS unavailable"
+  // GPS card state
+  const gpsIndicator = !hasLocation || gpsError
+    ? "bg-[#D1D5DB]"
     : distance == null
-    ? "Getting location…"
-    : `${Math.round(distance)}m away${accuracy != null ? ` · ±${Math.round(accuracy)}m` : ""}`
+    ? "bg-amber-400 animate-pulse"
+    : isWithinRange
+    ? "bg-green-500"
+    : "bg-amber-500"
+
+  const gpsStatusBg = !hasLocation ? "bg-[#F9FAFB]"
+    : gpsError ? "bg-[#FEF2F2]"
+    : distance == null ? "bg-[#F9FAFB]"
+    : isWithinRange ? "bg-[#F0FDF4]"
+    : "bg-[#FFFBEB]"
+
+  const gpsStatusDot = !hasLocation || gpsError ? "bg-[#9CA3AF]"
+    : distance == null ? "bg-amber-400"
+    : isWithinRange ? "bg-green-500"
+    : "bg-amber-500"
+
+  const gpsStatusText = !hasLocation || gpsError ? "text-[#6B7280]"
+    : distance == null ? "text-[#6B7280]"
+    : isWithinRange ? "text-green-700"
+    : "text-amber-700"
+
+  const gpsStatusLabel = !hasLocation ? "Location not tagged"
+    : gpsError ? "GPS unavailable — enable location services"
+    : distance == null ? "Acquiring GPS signal…"
+    : isWithinRange ? `Ready to Record — within ${PROXIMITY_THRESHOLD}m`
+    : `${Math.round(distance)}m away — move closer to record`
 
   return (
     <>
-      <div className="flex justify-center py-1">
-        <Badge variant="outline" className={cn("text-xs gap-1.5 font-normal", distanceBadgeColor)}>
-          <span className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            isWithinRange ? "bg-green-500" : distance != null && distance < 100 ? "bg-amber-500" : "bg-muted-foreground/50"
-          )} />
-          {distanceLabel}
-        </Badge>
+      {/* GPS Status Card */}
+      <div className="rounded-xl border border-[#E5E7EB] bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#F3F4F6]">
+          <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide flex items-center gap-1.5">
+            <MapPin className="h-3 w-3 text-[#9CA3AF]" />
+            GPS Status
+          </p>
+          <span className={cn("h-2 w-2 rounded-full", gpsIndicator)} />
+        </div>
+        <div className="px-4 py-3 space-y-2.5">
+          {hasLocation && !gpsError && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-wide">Distance</p>
+                <p className="text-2xl font-bold font-mono text-[#111827] leading-tight">
+                  {distance != null ? `${Math.round(distance)}m` : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-wide">Accuracy</p>
+                <p className="text-2xl font-bold font-mono text-[#111827] leading-tight">
+                  {accuracy != null ? `±${Math.round(accuracy)}m` : "—"}
+                </p>
+              </div>
+            </div>
+          )}
+          <div className={cn("flex items-center gap-2 rounded-lg px-3 py-2", gpsStatusBg)}>
+            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", gpsStatusDot)} />
+            <p className={cn("text-xs font-semibold", gpsStatusText)}>{gpsStatusLabel}</p>
+          </div>
+        </div>
       </div>
 
+      {/* RECORD VISIT */}
       <Button
         size="lg"
         onClick={handleOpen}
         disabled={isDisabled}
-        className="w-full gap-2 h-11 font-semibold tracking-wide bg-yellow-500 hover:bg-yellow-400 text-black border-0 disabled:opacity-60"
+        className="w-full gap-2 h-12 font-bold tracking-widest bg-[#C99A2E] hover:bg-[#B08926] active:bg-[#9A7820] text-white border-0 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(201,154,46,.35)]"
       >
         <Navigation className="h-4 w-4" />
         RECORD VISIT
       </Button>
 
-      <Dialog open={formOpen} onOpenChange={(open) => { if (!open) setFormOpen(false) }}>
-        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="text-secondary text-base">Record Visit</DialogTitle>
-          </DialogHeader>
+      {/* Record Visit — custom overlay */}
+      {formOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-[rgba(15,23,42,.45)] overflow-y-auto"
+          onClick={(e) => { if (e.target === e.currentTarget) setFormOpen(false) }}
+        >
+          <div className="relative w-full max-w-lg bg-card rounded-2xl shadow-[0_20px_80px_rgba(15,23,42,.3)] flex flex-col my-auto">
 
-          <div className="flex-1 overflow-y-auto py-2 space-y-5">
-            {/* Loan Obtainer */}
-            <div className="space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Loan Obtainer</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="obtainer-statement" className="text-sm">Statement <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="obtainer-statement"
-                  value={obtainerStatement}
-                  onChange={e => setObtainerStatement(e.target.value)}
-                  placeholder="Statement from the loan holder…"
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
-                <SignaturePad ref={obtainerSigRef} className="h-36 w-full" />
-              </div>
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-card rounded-t-2xl border-b border-[#E9D9C5] flex items-center justify-between px-5 py-4">
+              <p className="text-sm font-bold text-primary">Record Visit</p>
+              <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)} disabled={submitting} aria-label="Close">
+                <X className="h-5 w-5" />
+              </Button>
             </div>
 
-            {/* Part Payment */}
-            <div className="space-y-3 pt-1 border-t">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Part Payment</p>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="part-payment"
-                  checked={partPaymentMade}
-                  onCheckedChange={(v) => setPartPaymentMade(!!v)}
-                />
-                <Label htmlFor="part-payment" className="text-sm cursor-pointer">Part payment made</Label>
-              </div>
-              {partPaymentMade && (
-                <div className="grid grid-cols-2 gap-3">
+            {/* Scrollable body */}
+            <div className="overflow-y-auto max-h-[70vh] px-5 py-5 space-y-4">
+
+              {/* Loan Obtainer */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Loan Obtainer</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="pmt-date" className="text-sm">Date</Label>
-                    <Input
-                      id="pmt-date"
-                      type="date"
-                      value={partPaymentDate}
-                      onChange={e => setPartPaymentDate(e.target.value)}
-                      max={todayStr()}
+                    <Label htmlFor="obtainer-statement" className="text-sm">Statement <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="obtainer-statement"
+                      value={obtainerStatement}
+                      onChange={e => setObtainerStatement(e.target.value)}
+                      placeholder="Statement from the loan holder…"
+                      rows={3}
+                      className="resize-none"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="pmt-amount" className="text-sm">Amount (LKR)</Label>
-                    <Input
-                      id="pmt-amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={partPaymentAmount}
-                      onChange={e => setPartPaymentAmount(e.target.value)}
-                      placeholder="0.00"
-                    />
+                    <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
+                    <SignaturePad ref={obtainerSigRef} className="h-36 w-full" />
                   </div>
                 </div>
+              </div>
+
+              {/* Part Payment */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Part Payment</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="part-payment" checked={partPaymentMade} onCheckedChange={(v) => setPartPaymentMade(!!v)} />
+                    <Label htmlFor="part-payment" className="text-sm cursor-pointer">Part payment made during this visit</Label>
+                  </div>
+                  {partPaymentMade && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="pmt-date" className="text-sm">Date</Label>
+                        <Input id="pmt-date" type="date" value={partPaymentDate} onChange={e => setPartPaymentDate(e.target.value)} max={todayStr()} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="pmt-amount" className="text-sm">Amount (LKR)</Label>
+                        <Input id="pmt-amount" type="number" min="0" step="0.01" value={partPaymentAmount} onChange={e => setPartPaymentAmount(e.target.value)} placeholder="0.00" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Loan Officer */}
+              <div className="bg-card border border-[#E5E7EB] rounded-xl overflow-hidden shadow-[0_2px_6px_rgba(15,23,42,0.04)]">
+                <div className="px-4 py-2.5 bg-[#FAF6F2] border-b border-[#E9D9C5] border-l-4 border-l-[#C99A2E]">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide">Loan Officer</p>
+                </div>
+                <div className="px-4 py-4 space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="officer-instructions" className="text-sm">Statement <span className="text-destructive">*</span></Label>
+                    <Textarea
+                      id="officer-instructions"
+                      value={officerInstructions}
+                      onChange={e => setOfficerInstructions(e.target.value)}
+                      placeholder="Statement from the visiting loan officer…"
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
+                    <SignaturePad ref={officerSigRef} className="h-36 w-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="flex items-center gap-2.5 rounded-xl border border-red-200 bg-[#FEF2F2] px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <p className="text-xs font-medium text-red-600">{error}</p>
+                </div>
               )}
+
             </div>
 
-            {/* Officer */}
-            <div className="space-y-3 pt-1 border-t">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Loan Officer</p>
-              <div className="space-y-1.5">
-                <Label htmlFor="officer-instructions" className="text-sm">Statement <span className="text-destructive">*</span></Label>
-                <Textarea
-                  id="officer-instructions"
-                  value={officerInstructions}
-                  onChange={e => setOfficerInstructions(e.target.value)}
-                  placeholder="Statement from the visiting loan officer…"
-                  rows={3}
-                  className="resize-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm">Signature <span className="text-destructive">*</span></Label>
-                <SignaturePad ref={officerSigRef} className="h-36 w-full" />
-              </div>
+            {/* Sticky footer */}
+            <div className="sticky bottom-0 bg-card rounded-b-2xl border-t border-[#E9D9C5] px-5 py-4 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>Cancel</Button>
+              <Button onClick={handleSubmit} disabled={submitting} className="min-w-[100px]">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Visit"}
+              </Button>
             </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription className="text-xs">{error}</AlertDescription>
-              </Alert>
-            )}
           </div>
-
-          <DialogFooter className="gap-2 pt-2 border-t">
-            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Visit"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   )
 }

@@ -19,7 +19,11 @@ export async function GET(request: NextRequest) {
       headers: { Authorization: `Bearer ${session.authToken}` },
       cache: "no-store",
     })
-    if (res.status === 404) return NextResponse.json({ error: "Loan not found" }, { status: 404 })
+    if (res.status === 404) {
+      const msg = await res.json().catch(() => null)
+      const error = typeof msg === "string" ? msg : "Loan not found."
+      return NextResponse.json({ error }, { status: 404 })
+    }
     if (!res.ok) return NextResponse.json({ error: "Failed to fetch loan details" }, { status: res.status })
     return NextResponse.json(await res.json())
   } catch {

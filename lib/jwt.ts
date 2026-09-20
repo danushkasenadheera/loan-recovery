@@ -1,7 +1,9 @@
 import { SignJWT, jwtVerify } from "jose"
 import { cookies } from "next/headers"
 
-const JWT_SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "fallback-secret-key")
+const rawSecret = process.env.NEXTAUTH_SECRET
+if (!rawSecret) throw new Error("NEXTAUTH_SECRET environment variable is not set")
+const JWT_SECRET = new TextEncoder().encode(rawSecret)
 const COOKIE_NAME = "auth-token"
 
 export interface JWTPayload {
