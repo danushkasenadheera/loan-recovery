@@ -23,6 +23,10 @@ function fmtCurrency(n: number | null) {
   return `LKR ${n.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`
 }
 
+function fmtShare(n: number) {
+  return `LKR ${n.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -57,6 +61,7 @@ export function LoanVisitsAccordion({ detail }: { detail: LoanDetail }) {
         <AccordionContent className="space-y-3 pb-4">
           <Row label="Reference No" value={detail.referenceNo} />
           {detail.address && <Row label="Address" value={detail.address} />}
+          {detail.memberShare != null && <Row label="Member Share" value={fmtShare(detail.memberShare)} />}
           {detail.blockAccountNo && <Row label="Bank Account" value={detail.blockAccountNo} />}
         </AccordionContent>
       </AccordionItem>

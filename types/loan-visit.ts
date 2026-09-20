@@ -24,6 +24,7 @@ export interface LoanDetail {
   balanceLoanAmount: number | null
   dateLastPaid: string | null
   nic: string | null
+  memberShare: number | null
   arrearsInstallments: number | null
   arrearsLoanAmount: number | null
   arrearsInterestAmount: number | null
