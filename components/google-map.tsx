@@ -459,7 +459,7 @@ export function GoogleMapComponent({ loanLocation, loanData, dashboardHref, mapC
             </Link>
           </Button>
 
-          {canTag && (
+          {!loanLocation && canTag && (
             <Button
               onClick={() => setShowConfirm(true)}
               disabled={!userLocation || isSettingLocation || !isMapLoaded}
@@ -469,7 +469,7 @@ export function GoogleMapComponent({ loanLocation, loanData, dashboardHref, mapC
                 ? <Loader2 className="h-4 w-4 animate-spin" />
                 : <MapPin className="h-4 w-4" />
               }
-              {loanLocation ? "Update Tagged Location" : "Save Tagged Location"}
+              Save Tagged Location
             </Button>
           )}
         </div>

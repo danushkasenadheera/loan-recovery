@@ -115,6 +115,22 @@ export function RemindersTabs({ active: initialActive, completed: initialComplet
 
   return (
     <>
+      {/* Stat strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-card border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+          <p className="text-xs text-[#6B7280] font-medium">Active</p>
+          <p className="text-2xl font-bold text-primary mt-0.5">{activeList.length}</p>
+        </div>
+        <div className="bg-card border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+          <p className="text-xs text-[#6B7280] font-medium">Overdue</p>
+          <p className={`text-2xl font-bold mt-0.5 ${overdueList.length > 0 ? "text-red-600" : "text-[#111827]"}`}>{overdueList.length}</p>
+        </div>
+        <div className="bg-card border border-[#E5E7EB] rounded-xl px-4 py-3 shadow-[0_2px_10px_rgba(15,23,42,0.04)]">
+          <p className="text-xs text-[#6B7280] font-medium">Completed</p>
+          <p className="text-2xl font-bold text-green-600 mt-0.5">{completedList.length}</p>
+        </div>
+      </div>
+
       {/* Pill tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map(({ key, label, count }) => (
@@ -190,7 +206,7 @@ export function RemindersTabs({ active: initialActive, completed: initialComplet
 
                   {/* Metadata */}
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-[26px]">
-                    <span className="text-xs text-[#6B7280]">Branch {r.bankCode} · {r.loanType} / {r.loanCode}</span>
+                    <span className="text-xs font-mono text-[#6B7280]">{r.bankCode}/{r.loanCode}/{r.loanType}</span>
                     <span className="text-xs text-[#6B7280]">{fmtDate(r.reminderDate)}</span>
                     {isCompletedTab && r.attendedAt && (
                       <span className="text-xs text-green-600 font-medium">Done {fmtDate(r.attendedAt)}</span>

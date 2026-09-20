@@ -10,28 +10,68 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+const DISMISSED_KEY = "pwa-install-dismissed-at"
+const SNOOZE_MS = 7 * 24 * 60 * 60 * 1000
+
+function isStandalone() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  )
+}
+
+function isSnoozed() {
+  try {
+    const at = Number(localStorage.getItem(DISMISSED_KEY))
+    return at > 0 && Date.now() - at < SNOOZE_MS
+  } catch {
+    return false
+  }
+}
+
+function snooze() {
+  try {
+    localStorage.setItem(DISMISSED_KEY, String(Date.now()))
+  } catch {}
+}
+
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const handler = (e: Event) => {
+    if (isStandalone()) return
+
+    const onBeforeInstall = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      setVisible(true)
+      if (!isSnoozed()) setVisible(true)
     }
-    window.addEventListener("beforeinstallprompt", handler)
-    return () => window.removeEventListener("beforeinstallprompt", handler)
+    const onInstalled = () => {
+      setDeferredPrompt(null)
+      setVisible(false)
+    }
+
+    window.addEventListener("beforeinstallprompt", onBeforeInstall)
+    window.addEventListener("appinstalled", onInstalled)
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstall)
+      window.removeEventListener("appinstalled", onInstalled)
+    }
   }, [])
 
   const handleInstall = async () => {
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    if (outcome === "accepted") {
-      setDeferredPrompt(null)
-      setVisible(false)
-    }
+    if (outcome === "dismissed") snooze()
+    setDeferredPrompt(null)
+    setVisible(false)
+  }
+
+  const handleClose = () => {
+    snooze()
+    setVisible(false)
   }
 
   if (!visible) return null
@@ -46,7 +86,7 @@ export function PWAInstallPrompt() {
             </div>
             <CardTitle className="text-sm">Install App</CardTitle>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setVisible(false)}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClose} aria-label="Dismiss install prompt">
             <X className="h-4 w-4" />
           </Button>
         </div>

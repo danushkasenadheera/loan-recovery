@@ -120,4 +120,5 @@ export interface LoanVisitDetail {
   managerNote: string | null
   managerSignature: string | null
   managerNoteAt: string | null
+  managerUserName: string | null
 }

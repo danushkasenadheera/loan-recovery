@@ -72,7 +72,7 @@ export function EmployeeLoanFilter({ loanTypes, bankCode }: Props) {
   async function fetchEmployees(search: string) {
     setEmpLoading(true)
     try {
-      const params = new URLSearchParams({ BankCode: bankCode })
+      const params = new URLSearchParams()
       if (search.trim()) params.set("Search", search.trim())
       const res = await fetch(`/api/employees?${params}`)
       if (res.ok) setEmployees(await res.json())

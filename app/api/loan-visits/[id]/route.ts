@@ -6,6 +6,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   if (!session) return NextResponse.json({ error: "Authentication required" }, { status: 401 })
 
   const { id } = await params
+  if (!/^\d+$/.test(id)) return NextResponse.json({ error: "Invalid ID" }, { status: 400 })
 
   try {
     const res = await fetch(`${process.env.API_BASE_URL}/loan-visits/${id}`, {

@@ -5,7 +5,6 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { LoanSearchForm } from "@/components/loan-search-form"
 import { LoanInfoCard } from "@/components/loan-info-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
 import { Button } from "@/components/ui/button"
 import { BellRing, BarChart2 } from "lucide-react"
 
@@ -51,7 +50,10 @@ async function fetchLoan(
       headers: { Authorization: `Bearer ${authToken}` },
       cache: "no-store",
     })
-    if (res.status === 404) return { error: "Loan not found" }
+    if (res.status === 404) {
+      const msg = await res.json().catch(() => null)
+      return { error: typeof msg === "string" ? msg : "Loan not found." }
+    }
     if (!res.ok) return { error: "Failed to fetch loan details" }
     return { data: await res.json() }
   } catch {
@@ -118,8 +120,6 @@ export default async function DashboardPage({
 
         {loan && <LoanInfoCard loan={loan} />}
       </main>
-
-      <PWAInstallPrompt />
     </div>
   )
 }

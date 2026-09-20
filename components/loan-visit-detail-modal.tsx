@@ -216,7 +216,7 @@ export function LoanVisitDetailModal({ visitId, open, onOpenChange, guarantors =
 
               {/* Manager Note */}
               {detail.managerNote && (
-                <SectionCard title="Manager Note">
+                <SectionCard title="Manager Note" name={detail.managerUserName ?? undefined}>
                   <div className="space-y-3">
                     <p className="text-sm text-[#374151] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-3 py-2.5 leading-relaxed">{detail.managerNote}</p>
                     {detail.managerSignature && (
