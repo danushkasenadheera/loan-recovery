@@ -75,6 +75,7 @@ export interface LoanSummary {
   interestToBePaidUptoToday: number
   penaltyInterestToBePaidUptoToday: number
   totalOutstanding: number
+  noOfInterestPaid: number
 }
 
 export interface LoanDetailReport {
@@ -97,6 +98,7 @@ export interface LoanVisitListItem {
   hasGuarantor2Signature: boolean
   guarantor2SignedAt: string | null
   hasManagerNote: boolean
+  outOfRange: boolean
 }
 
 export interface LoanVisitDetail {
@@ -119,4 +121,5 @@ export interface LoanVisitDetail {
   managerNote: string | null
   managerSignature: string | null
   managerNoteAt: string | null
+  outOfRange: boolean
 }

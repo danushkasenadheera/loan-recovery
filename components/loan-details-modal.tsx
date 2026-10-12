@@ -108,18 +108,19 @@ export function LoanDetailsModal({ open, onOpenChange, loan }: LoanDetailsModalP
             {/* Loan Summary */}
             <section>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Loan Summary</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
                 {[
                   { label: "Opening Principal", value: `Rs. ${fmtAmt(summary?.openingPrincipal)}` },
-                  { label: "Installments Paid", value: summary?.noOfInstallmentsPaid?.toString() ?? "—" },
+                  { label: "Principal Installments Paid", value: summary?.noOfInstallmentsPaid?.toString() ?? "—" },
                   { label: "Principal Paid", value: `Rs. ${fmtAmt(summary?.principalPaid)}` },
+                  { label: "Interest Installments Paid", value: summary?.noOfInterestPaid?.toString() ?? "—" },
                   { label: "Interest Paid", value: `Rs. ${fmtAmt(summary?.interestPaid)}` },
                   { label: "Penalty Paid", value: `Rs. ${fmtAmt(summary?.penaltyPaid)}` },
                   { label: "Loan Balance", value: `Rs. ${fmtAmt(summary?.remainingPrincipalBalance)}`, highlight: true },
                 ].map(({ label, value, highlight }) => (
-                  <div key={label} className={`rounded-lg border p-3 space-y-1 ${highlight ? "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800" : "bg-card"}`}>
+                  <div key={label} className={`rounded-lg border p-2.5 space-y-1 min-w-0 ${highlight ? "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800" : "bg-card"}`}>
                     <p className="text-xs text-muted-foreground">{label}</p>
-                    <p className="text-sm font-semibold font-mono">{value}</p>
+                    <p className="text-[13px] font-semibold font-mono whitespace-nowrap">{value}</p>
                   </div>
                 ))}
               </div>

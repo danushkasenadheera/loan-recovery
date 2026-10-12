@@ -108,6 +108,12 @@ export function LoanVisitList({ initialVisits, loan }: LoanVisitListProps) {
                 </Badge>
               )}
 
+              {v.outOfRange && (
+                <Badge variant="outline" className="text-xs border-amber-500 text-amber-700">
+                  Outside Range
+                </Badge>
+              )}
+
               <Button
                 size="sm"
                 variant="ghost"

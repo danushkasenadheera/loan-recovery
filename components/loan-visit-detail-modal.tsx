@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 import { Loader2 } from "lucide-react"
 import type { LoanVisitDetail } from "@/types/loan-visit"
 
@@ -100,6 +101,13 @@ export function LoanVisitDetailModal({ visitId, open, onOpenChange }: LoanVisitD
                       {detail.visitLat.toFixed(6)}, {detail.visitLang.toFixed(6)}
                     </dd>
                   </div>
+                  {detail.outOfRange && (
+                    <div className="col-span-2">
+                      <Badge variant="outline" className="text-xs border-amber-500 text-amber-700">
+                        Recorded Outside Range
+                      </Badge>
+                    </div>
+                  )}
                 </dl>
               </Section>
 

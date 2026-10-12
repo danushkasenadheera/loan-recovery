@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
         PartPaymentAmount: body.partPaymentAmount ?? null,
         OfficerInstructions: body.officerInstructions,
         OfficerSignature: body.officerSignature,
+        OutOfRangeOverride: body.outOfRangeOverride ?? false,
       }),
     })
     if (!res.ok) return NextResponse.json({ error: "Failed to record visit" }, { status: res.status })
